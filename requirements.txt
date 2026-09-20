@@ -4,3 +4,10 @@ scikit-learn
 xgboost
 streamlit
 joblib
+prophet
+matplotlib
+seaborn
+plotly
+Pillow
+requests
+python-dotenv

@@ -16,8 +16,8 @@ val/<class>/ structure - no code changes needed.
 """
 
 import matplotlib.pyplot as plt
-import tensorflow as tf
-from tensorflow.keras import layers, models
+import tensorflow as tf # type: ignore
+from keras import layers, models # type: ignore
 
 IMG_SIZE = 128
 BATCH_SIZE = 32
