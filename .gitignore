@@ -23,3 +23,6 @@ Thumbs.db
 # Forecast outputs (regenerated locally, optional to track)
 # rainfall_forecast_*.csv
 # rainfall_forecast_*.png
+.env
+.env.*
+*.env
