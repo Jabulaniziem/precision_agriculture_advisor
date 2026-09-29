@@ -137,8 +137,24 @@ INTENTS = {
             "crop maturity",
             "harvest season",
             "when to pick",
+            "harvest",
+            "when can I harvest",
+            "harvest schedule",
+            "best time to harvest",
+            "harvest my crop",
+            "ready to harvest",
+            "harvesting time",
+            "when do I harvest",
+            "crop harvest date",
+            "when is harvest",
         ],
-        "response": "Your crop will be ready for harvest in approximately {days_to_harvest} days. Look for {harvest_signs} as indicators of readiness."
+        "response": (
+            "Great news, {farmer_name}! Based on your {crop_type} crop, you can harvest in approximately "
+            "{days_to_harvest} days from planting. Look out for {harvest_signs} as clear indicators that "
+            "your crop is ready. For example, you can harvest once those signs appear — typically around "
+            "{days_to_harvest} days into the growing season. Plan your equipment and storage ahead of time "
+            "to avoid post-harvest losses."
+        )
     },
     
     # ----- PEST CONTROL -----
@@ -373,6 +389,12 @@ class FarmChatbot:
     def get_farmer_name(self):
         return self.farmer_name
 
+    # Keyword shortcuts: map trigger words to a guaranteed intent,
+    # bypassing the TF-IDF similarity threshold.
+    _KEYWORD_INTENTS = {
+        "harvest": "harvest_advice",
+    }
+
     def match_intent(self, user_text: str, threshold: float = 0.12):
         """Match user text to closest intent using cosine similarity."""
         user_text = user_text.lower().strip()
@@ -380,6 +402,12 @@ class FarmChatbot:
         # Skip empty text
         if not user_text:
             return "fallback", 0.0
+
+        # Keyword shortcut: if any trigger word appears in the message,
+        # return its mapped intent immediately (score 1.0).
+        for keyword, intent in self._KEYWORD_INTENTS.items():
+            if keyword in user_text:
+                return intent, 1.0
         
         query_vec = self.vectorizer.transform([user_text])
         sims = cosine_similarity(query_vec, self.example_matrix).flatten()

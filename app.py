@@ -22,6 +22,9 @@ import base64
 from pathlib import Path
 from datetime import datetime
 import io
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import numpy as np
 import pandas as pd
@@ -335,6 +338,131 @@ def fetch_weather(town: str, api_key: str):
         return None
 
 
+# ----------------------------------------------------------------------------
+# HELPER: Read real 7-day rainfall from pre-generated forecast CSV
+# ----------------------------------------------------------------------------
+def _get_7day_rainfall(province: str) -> str:
+    """Return the summed 7-day predicted rainfall for a province from the
+    pre-generated Prophet forecast CSV.  Falls back to a neutral value if
+    the file is missing (e.g. forecast not yet generated)."""
+    forecast_file = f"rainfall_forecast_{province.replace(' ', '_')}.csv"
+    try:
+        df = pd.read_csv(forecast_file)
+        total = df.head(7)["predicted_rainfall_mm"].sum()
+        return f"{total:.1f}"
+    except (FileNotFoundError, KeyError):
+        return "15.0"
+
+
+# ----------------------------------------------------------------------------
+# HELPER: Provincial yield benchmark (Feature 6)
+# ----------------------------------------------------------------------------
+@st.cache_data
+def _load_yield_dataset() -> pd.DataFrame:
+    """Load the crop yield dataset once and cache it."""
+    try:
+        return pd.read_csv("sa_crop_yield_dataset.csv")
+    except FileNotFoundError:
+        return pd.DataFrame()
+
+
+def _show_yield_benchmark(predicted_yield: float, province: str, crop_type: str) -> None:
+    """Show how the farmer's predicted yield compares to the provincial average."""
+    df = _load_yield_dataset()
+    if df.empty:
+        return
+    subset = df[(df["province"] == province) & (df["crop_type"] == crop_type)]
+    if subset.empty:
+        return
+    avg_yield = subset["yield_tons_per_ha"].mean()
+    diff_pct = ((predicted_yield - avg_yield) / avg_yield) * 100
+    direction = "above" if diff_pct >= 0 else "below"
+    colour_fn = st.success if diff_pct >= 0 else st.warning
+    colour_fn(
+        f"📊 **Yield Benchmark:** Your predicted **{predicted_yield:.2f} t/ha** is "
+        f"**{abs(diff_pct):.1f}% {direction}** the {province} average for "
+        f"{crop_type} ({avg_yield:.2f} t/ha across {len(subset):,} records)."
+    )
+
+
+# ----------------------------------------------------------------------------
+# HELPER: Feature importance chart (Feature 5)
+# ----------------------------------------------------------------------------
+# Feature names must match the order used in yield_prediction_pipeline.py
+_NUMERIC_FEATURES = [
+    "season_rainfall_mm", "avg_temp_c", "soil_moisture_pct", "irrigation_mm",
+    "fertilizer_kg_ha", "pest_pressure_index", "farm_size_ha",
+    "total_water_mm", "fertilizer_intensity", "heat_stress_flag",
+]
+_CATEGORICAL_FEATURES = ["province", "crop_type", "soil_type"]
+
+_FEATURE_LABELS = {
+    "season_rainfall_mm": "Season Rainfall",
+    "avg_temp_c": "Avg Temperature",
+    "soil_moisture_pct": "Soil Moisture",
+    "irrigation_mm": "Irrigation Applied",
+    "fertilizer_kg_ha": "Fertilizer (kg/ha)",
+    "pest_pressure_index": "Pest Pressure",
+    "farm_size_ha": "Farm Size",
+    "total_water_mm": "Total Water",
+    "fertilizer_intensity": "Fertilizer Intensity",
+    "heat_stress_flag": "Heat Stress Flag",
+}
+
+
+def _show_feature_importance(pipeline) -> None:
+    """Extract feature importances from the trained pipeline and render a
+    horizontal bar chart using Plotly (already in requirements.txt)."""
+    import plotly.graph_objects as go
+
+    try:
+        preprocessor = pipeline.named_steps["preprocessor"]
+        model_step = pipeline.named_steps["model"]
+        if not hasattr(model_step, "feature_importances_"):
+            return  # not a tree-based model
+
+        cat_names = list(
+            preprocessor.named_transformers_["cat"]["onehot"]
+            .get_feature_names_out(_CATEGORICAL_FEATURES)
+        )
+        all_names = _NUMERIC_FEATURES + cat_names
+        importances = pd.Series(model_step.feature_importances_, index=all_names)
+
+        # Keep only numeric features for the chart — they're the actionable ones
+        numeric_imp = importances[_NUMERIC_FEATURES].sort_values()
+        labels = [_FEATURE_LABELS.get(n, n) for n in numeric_imp.index]
+
+        fig = go.Figure(go.Bar(
+            x=numeric_imp.values,
+            y=labels,
+            orientation="h",
+            marker_color="#2E7D32",
+            text=[f"{v:.3f}" for v in numeric_imp.values],
+            textposition="outside",
+        ))
+        fig.update_layout(
+            title="🔍 What Drives Your Yield? (Feature Importance)",
+            xaxis_title="Importance Score",
+            yaxis_title="",
+            margin=dict(l=10, r=40, t=50, b=30),
+            height=350,
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font=dict(color="#f1f1f1"),
+            xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
+        )
+        with st.expander("🔍 What Drives Your Yield? — Feature Importance", expanded=False):
+            st.plotly_chart(fig, use_container_width=True)
+            st.caption(
+                "Importance scores show how much each input variable influenced "
+                "the model's prediction. Higher = more impact on yield."
+            )
+    except Exception:
+        pass  # silently skip if model structure differs
+
+
+
+
 # ============================================================================
 # SIDEBAR – Formal Sign‑In
 # ============================================================================
@@ -463,7 +591,7 @@ with tab1:
             st.error("Model not loaded. Please run yield_prediction_pipeline.py first.")
         else:
             total_water_mm = season_rainfall_mm + irrigation_mm
-            fertilizer_intensity = fertilizer_kg_ha / max(1.0, (farm_size_ha ** 0.5))
+            fertilizer_intensity = fertilizer_kg_ha / np.log1p(farm_size_ha)
             heat_stress_flag = int(avg_temp_c > 26)
 
             input_df = pd.DataFrame([{
@@ -501,9 +629,16 @@ with tab1:
                 "farmer_name": st.session_state.farmer_name,
                 "farmer_email": st.session_state.farmer_email,
                 "total_water_mm": f"{total_water_mm:.0f}",
-                "days_to_harvest": str(int(90 + np.random.normal(0, 10))),
-                "harvest_signs": "drying of leaves and kernels",
-                "rainfall_7_day": f"{np.random.uniform(5, 25):.1f}",
+                "days_to_harvest": str({
+                    "Maize": 120, "Wheat": 150, "Soybean": 110, "Sunflower": 100
+                }.get(crop_type, 120)),
+                "harvest_signs": {
+                    "Maize": "dry husks, hard kernels, and browning tassels",
+                    "Wheat": "golden straw colour and firm grain",
+                    "Soybean": "yellowing pods and rattling seeds",
+                    "Sunflower": "brown back-of-head and drooping face",
+                }.get(crop_type, "drying of leaves and kernels"),
+                "rainfall_7_day": _get_7day_rainfall(province),
                 "fertilizer_kg_ha": str(fertilizer_kg_ha),
                 "market_price": market_price_per_ton,
                 "prod_cost": production_cost_per_ha,
@@ -525,6 +660,12 @@ with tab1:
                 st.write("**Fertilizer note:**", fert_note)
                 st.write("**Total water available:**", f"{total_water_mm:.0f} mm")
                 st.write("**Farm Size:**", f"{farm_size_ha:.1f} ha")
+
+            # --- Feature 6: Provincial yield benchmark ---
+            _show_yield_benchmark(predicted_yield, province, crop_type)
+
+            # --- Feature 5: Feature importance chart ---
+            _show_feature_importance(model)
 
             st.success("Prediction saved — ask the Farmer Assistant chatbot about it in the next tab.")
 
@@ -559,23 +700,87 @@ with tab1:
 
 
 # ----------------------------------------------------------------------------
-# TAB 2 – Chatbot (unchanged logic)
+# TAB 2 – Chatbot
 # ----------------------------------------------------------------------------
+def _tts_button(text: str, key: str) -> None:
+    """Render an inline 🔊 / ⏹ speaker button that reads `text` aloud via
+    the browser's Web Speech API.  Uses a <script> addEventListener so that
+    Streamlit's HTML sanitiser does not strip the handler."""
+    # Escape backticks and backslashes so the text is safe in a JS template literal
+    safe_text = text.replace("\\", "\\\\").replace("`", "\\`").replace("'", "\\'")
+    html_block = f"""
+<div style="display:inline-block;margin-top:4px;">
+  <button
+    id="tts_btn_{key}"
+    title="Read aloud"
+    style="
+      background: none;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px 7px;
+      line-height: 1.4;
+      color: #374151;
+    "
+  >🔊</button>
+</div>
+<script>
+(function() {{
+  var btn = document.getElementById('tts_btn_{key}');
+  if (!btn) return;
+  btn.addEventListener('click', function() {{
+    var synth = window.speechSynthesis;
+    if (synth.speaking) {{
+      synth.cancel();
+      btn.textContent = '🔊';
+      btn.title = 'Read aloud';
+      return;
+    }}
+    var utt = new SpeechSynthesisUtterance('{safe_text}');
+    utt.rate = 0.95;
+    utt.pitch = 1.05;
+    utt.onstart = function() {{
+      btn.textContent = '⏹';
+      btn.title = 'Stop reading';
+    }};
+    utt.onend = function() {{
+      btn.textContent = '🔊';
+      btn.title = 'Read aloud';
+    }};
+    utt.onerror = function() {{
+      btn.textContent = '🔊';
+      btn.title = 'Read aloud';
+    }};
+    synth.speak(utt);
+  }});
+}})();
+</script>
+"""
+    st.html(html_block, unsafe_allow_javascript=True)
+
+
 with tab2:
-    st.subheader("💬 Ask the Farmer Assistant")
+    st.subheader("💬 Farmer Assistant Chat")
+
+    # --- Greeting / status banner ---
     if st.session_state.signed_in:
-        st.caption(f"Hello **{st.session_state.farmer_name}**! Try: \"when should I irrigate\", \"what will my yield be\", or ask any farming question.")
+        st.caption(
+            f"👋 Welcome back, **{st.session_state.farmer_name}**! "
+            "Ask me anything about your farm — irrigation, harvest timing, yield, diseases, and more. "
+            "Click 🔊 next to any reply to have it read aloud."
+        )
     else:
-        st.warning("Please sign in to get personalised responses.")
+        st.warning("🔒 Please sign in to get personalised responses.")
 
     if st.session_state.context and st.session_state.signed_in:
-        st.success(f"✅ Your farm data is loaded. Ask anything, {st.session_state.farmer_name}!")
+        st.success(f"✅ Farm data loaded — I'm ready to help you, {st.session_state.farmer_name}!")
     elif not st.session_state.signed_in:
-        st.info("ℹ️ Sign in first, then run a prediction so the assistant has your farm's data.")
+        st.info("ℹ️ Sign in first, then run a prediction so I have your farm's data.")
     else:
-        st.info("ℹ️ Run a prediction in the first tab so the assistant has your farm's data.")
+        st.info("ℹ️ Run a prediction in the first tab so I have your farm's data.")
 
-    with st.expander("💡 Suggested Questions"):
+    with st.expander("💡 Not sure what to ask? Try these"):
         suggested = suggest_questions()
         cols = st.columns(2)
         for idx, q in enumerate(suggested):
@@ -586,7 +791,7 @@ with tab2:
 
     user_input = st.text_input(
         f"Your question, {st.session_state.farmer_name if st.session_state.signed_in else 'Farmer'}:",
-        placeholder="e.g., When should I irrigate?",
+        placeholder="e.g., When should I harvest my maize?",
         disabled=not (st.session_state.signed_in and st.session_state.context),
         key="chat_input"
     )
@@ -596,9 +801,13 @@ with tab2:
 
     col1, col2, col3 = st.columns([1, 1, 4])
     with col1:
-        ask_button = st.button("Ask", disabled=not (st.session_state.signed_in and st.session_state.context), type="primary")
+        ask_button = st.button(
+            ":material/send: Ask",
+            disabled=not (st.session_state.signed_in and st.session_state.context),
+            type="primary",
+        )
     with col2:
-        clear_button = st.button("Clear Chat")
+        clear_button = st.button(":material/delete: Clear Chat")
     if clear_button:
         st.session_state.chat_history = []
         st.rerun()
@@ -612,12 +821,19 @@ with tab2:
 
     if st.session_state.chat_history:
         st.divider()
-        st.write("### 📝 Conversation History")
-        for speaker, msg in reversed(st.session_state.chat_history[-30:]):
+        st.write("### 📝 Conversation")
+        display_name = st.session_state.farmer_name if st.session_state.signed_in else "You"
+        for idx, (speaker, msg) in enumerate(reversed(st.session_state.chat_history[-30:])):
             if speaker == "You":
-                st.markdown(f"**{st.session_state.farmer_name if st.session_state.signed_in else 'You'}:** {msg}")
+                with st.chat_message("user"):
+                    st.markdown(f"**{display_name}:** {msg}")
             else:
-                st.markdown(f"**Assistant:** {msg}")
+                with st.chat_message("assistant"):
+                    msg_col, btn_col = st.columns([10, 1])
+                    with msg_col:
+                        st.markdown(f"**Assistant:** {msg}")
+                    with btn_col:
+                        _tts_button(msg, key=f"tts_{idx}")
 
 
 # ----------------------------------------------------------------------------
@@ -838,8 +1054,8 @@ with tab4:
         )
         if st.button("🌐 Get Live Weather", key="get_weather"):
             with st.spinner(f"Fetching live weather for {weather_town}..."):
-                API_KEY = "9e1af6d6bd4a6b3a13a4bb6cb6e6c3b6"
-                if API_KEY == "YOUR_OPENWEATHER_API_KEY":
+                API_KEY = os.getenv("OWM_API_KEY", "e673c3c4773d6b3a3bffc8816edc42c7")
+                if not API_KEY:
                     weather_data = {
                         "temperature": round(random.uniform(15, 32), 1),
                         "humidity": random.randint(40, 85),
