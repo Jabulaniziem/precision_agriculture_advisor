@@ -45,6 +45,8 @@ try:
     from streamlit_folium import folium_static
     MAP_AVAILABLE = True
 except ImportError:
+    folium = None          # type: ignore[assignment]
+    folium_static = None   # type: ignore[assignment]
     MAP_AVAILABLE = False
 
 from chatbot import FarmChatbot, suggest_questions, get_agronomic_fact
@@ -242,6 +244,13 @@ PROVINCE_CITIES = {
     "KwaZulu-Natal": "Durban",
     "North West": "Mahikeng",
     "Limpopo": "Polokwane"
+}
+PROVINCE_TOWNS = {
+    "Free State":    ["Bloemfontein", "Phuthaditjhaba", "Bethlehem", "Welkom", "Kroonstad", "Harrismith"],
+    "Mpumalanga":    ["Nelspruit", "Witbank", "Middelburg", "Secunda", "Barberton"],
+    "KwaZulu-Natal": ["Durban", "Pietermaritzburg", "Richards Bay", "Newcastle", "Ladysmith"],
+    "North West":    ["Mahikeng", "Rustenburg", "Klerksdorp", "Brits", "Potchefstroom"],
+    "Limpopo":       ["Polokwane", "Tzaneen", "Thohoyandou", "Louis Trichardt", "Mokopane"],
 }
 PROVINCE_COORDS = {
     "Free State": [-29.0, 26.0],
@@ -508,11 +517,36 @@ with st.sidebar:
                 st.rerun()
         with col_b:
             if st.button("🚪 Sign Out"):
+                # --- Clear user identity ---
                 st.session_state.farmer_name = ""
                 st.session_state.farmer_email = ""
                 st.session_state.signed_in = False
+
+                # --- Clear farm context & chat ---
                 st.session_state.context = {}
                 st.session_state.chat_history = []
+
+                # --- Clear prediction history ---
+                st.session_state.prediction_history = []
+
+                # --- Reset the chatbot object (drops personalised name) ---
+                st.session_state.bot = FarmChatbot()
+
+                # --- Remove any transient widget state so tabs return to defaults ---
+                for key in [
+                    "chat_input",
+                    "_suggested_question",
+                    "weather_province",
+                    "weather_town",
+                    "forecast_province",
+                    "get_weather",
+                    # Tab 1 yield widgets
+                    "yield_province", "yield_crop", "yield_soil", "yield_farm_size",
+                    "yield_rainfall", "yield_irrigation", "yield_moisture",
+                    "yield_temp", "yield_fert", "yield_pest",
+                    "yield_market", "yield_cost",
+                ]:
+                    st.session_state.pop(key, None)
                 st.rerun()
         st.divider()
         st.caption("🔒 Your credentials are stored only for this session.")
@@ -546,14 +580,63 @@ with title_col2:
         )
     else:
         st.title("Precision Agriculture Advisor")
-        st.caption("Please sign in using the sidebar to get personalised advice.")
+        st.caption("An AI Solution for the Agriculture Industry | AIBUY3A Business Analysis 3.2 Project")
 
 
 # ============================================================================
-# TABS
+# AUTHENTICATION GATE
+# ----------------------------------------------------------------------------
+# If the farmer is not signed in, render a welcome screen and stop the script.
+# This prevents the tabs below from ever rendering — no tab content is reachable
+# without authentication.
+# ============================================================================
+if not st.session_state.signed_in:
+    st.divider()
+
+    st.markdown("## 👋 Welcome to the Precision Agriculture Advisor")
+    st.markdown(
+        "Your data‑driven farming companion — powered by AI. "
+        "Sign in using the sidebar to unlock the full advisor."
+    )
+
+    st.write("")
+
+    # Feature overview cards
+    gate_col1, gate_col2, gate_col3, gate_col4 = st.columns(4)
+    with gate_col1:
+        st.info("🌾\n\n**Yield Prediction**\n\nML‑powered harvest forecast")
+    with gate_col2:
+        st.info("💧\n\n**Irrigation Advice**\n\nData‑driven water planning")
+    with gate_col3:
+        st.info("🌿\n\n**Disease Check**\n\nUpload a leaf, get a diagnosis")
+    with gate_col4:
+        st.info("🌦️\n\n**Weather & Forecast**\n\nLive data + 90‑day outlook")
+
+    st.write("")
+    gate_col5, gate_col6, gate_col7, gate_col8 = st.columns(4)
+    with gate_col5:
+        st.info("💬\n\n**Farmer Assistant**\n\nAsk in plain language")
+    with gate_col6:
+        st.info("💰\n\n**Profit Analysis**\n\nKnow your ROI before planting")
+    with gate_col7:
+        st.info("🔊\n\n**Voice Output**\n\nReplies read aloud")
+    with gate_col8:
+        st.info("🗺️\n\n**Farm Map**\n\nProvince‑level visualisation")
+
+    st.write("")
+    st.warning("🔒 **Please sign in using the sidebar to continue.**")
+
+    st.divider()
+    st.caption("🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project")
+
+    st.stop()   # <-- halts the script here; tabs below never render
+
+
+# ============================================================================
+# TABS — only reachable when signed in
 # ============================================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
-    ["Yield & Irrigation", "Farmer Assistant", "Disease Check", "Rainfall Forecast", "Farm Map"]
+    ["🌾 Yield & Irrigation", "💬 Farmer Assistant", "🌿 Disease Check", "🌦️ Rainfall Forecast", "🗺️ Farm Map"]
 )
 
 
@@ -567,23 +650,22 @@ with tab1:
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        province = st.selectbox("Province", PROVINCES)
-        crop_type = st.selectbox("Crop", CROPS)
-        soil_type = st.selectbox("Soil type", SOIL_TYPES)
-        farm_size_ha = st.number_input("Farm size (ha)", min_value=1.0, value=20.0)
+        province = st.selectbox("Province", PROVINCES, key="yield_province")
+        crop_type = st.selectbox("Crop", CROPS, key="yield_crop")
+        soil_type = st.selectbox("Soil type", SOIL_TYPES, key="yield_soil")
+        farm_size_ha = st.number_input("Farm size (ha)", min_value=1.0, value=20.0, key="yield_farm_size")
 
     with col2:
-        season_rainfall_mm = st.slider("Season rainfall so far (mm)", 100, 1100, 550)
-        irrigation_mm = st.slider("Irrigation applied so far (mm)", 0, 400, 100)
-        soil_moisture_pct = st.slider("Current soil moisture (%)", 5, 70, 30)
+        season_rainfall_mm = st.slider("Season rainfall so far (mm)", 100, 1100, 550, key="yield_rainfall")
+        irrigation_mm = st.slider("Irrigation applied so far (mm)", 0, 400, 100, key="yield_irrigation")
+        soil_moisture_pct = st.slider("Current soil moisture (%)", 5, 70, 30, key="yield_moisture")
 
     with col3:
-        avg_temp_c = st.slider("Average temperature (°C)", 12, 34, 22)
-        fertilizer_kg_ha = st.slider("Fertilizer applied (kg/ha)", 20, 400, 180)
-        pest_pressure_index = st.slider("Pest pressure (0=low, 10=severe)", 0.0, 10.0, 2.0)
-        market_price_per_ton = st.number_input("Market price (R/ton)", min_value=1000, value=4500, step=100)
-        production_cost_per_ha = st.number_input("Production cost (R/ha)", min_value=1000, value=12000, step=500)
-
+        avg_temp_c = st.slider("Average temperature (°C)", 12, 34, 22, key="yield_temp")
+        fertilizer_kg_ha = st.slider("Fertilizer applied (kg/ha)", 20, 400, 180, key="yield_fert")
+        pest_pressure_index = st.slider("Pest pressure (0=low, 10=severe)", 0.0, 10.0, 2.0, key="yield_pest")
+        market_price_per_ton = st.number_input("Market price (R/ton)", min_value=1000, value=4500, step=100, key="yield_market")
+        production_cost_per_ha = st.number_input("Production cost (R/ha)", min_value=1000, value=12000, step=500, key="yield_cost")
     if st.button("Predict Yield & Get Advice", type="primary"):
         if not st.session_state.signed_in:
             st.error("Please sign in first!")
@@ -989,7 +1071,6 @@ with tab3:
 
                         st.divider()
                         st.subheader("📊 Analysis Results")
-                        st.caption(f"🔎 Detected from filename: `{raw_name}` → key: `{base_name}`")
 
                         if result["color"] == "green":
                             st.success(f"**Status:** {result['status']}")
@@ -1039,16 +1120,16 @@ with tab3:
 # TAB 4 – Rainfall Forecast (cached weather)
 # ----------------------------------------------------------------------------
 with tab4:
-    st.subheader("🌦️ Weather & Rainfall Forecast")
+    st.subheader("🌤️ Weather & Rainfall Forecast")
     if st.session_state.signed_in:
         st.caption(f"Live weather and forecast for {st.session_state.farmer_name}'s region.")
     
-    with st.expander("🌤️ Current Weather (Live Data)", expanded=True):
+    with st.expander("🌤️ Current Weather ", expanded=True):
         weather_province = st.selectbox("Province", PROVINCES, key="weather_province", index=0)
-        default_town = PROVINCE_CITIES.get(weather_province, "Johannesburg")
-        weather_town = st.text_input(
+        town_options = PROVINCE_TOWNS.get(weather_province, list(PROVINCE_CITIES.values()))
+        weather_town = st.selectbox(
             "Nearest town to your farm",
-            value=default_town,
+            options=town_options,
             key="weather_town",
             help="Weather is fetched for this specific town."
         )
@@ -1066,8 +1147,11 @@ with tab4:
                 else:
                     weather_data = fetch_weather(weather_town, API_KEY)
                 if weather_data:
+                    temp_raw = weather_data["temperature"]
+                    temp_rounded = int(temp_raw + 0.5) if temp_raw >= 0 else -int(-temp_raw + 0.5)
+
                     c1, c2, c3, c4 = st.columns(4)
-                    c1.metric("🌡️ Temperature", f"{weather_data['temperature']}°C")
+                    c1.metric("🌡️ Temperature", f"{temp_rounded}°C")
                     c2.metric("💧 Humidity", f"{weather_data['humidity']}%")
                     c3.metric("💨 Wind Speed", f"{weather_data['wind_speed']} km/h")
                     c4.metric("☁️ Conditions", weather_data["conditions"])
@@ -1126,6 +1210,7 @@ with tab5:
                 popup=prov,
                 icon=folium.Icon(color="green", icon="leaf", prefix="fa")
             ).add_to(m)
+        assert folium_static is not None
         folium_static(m, width=700, height=450)
 
 
