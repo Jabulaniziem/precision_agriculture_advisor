@@ -151,7 +151,7 @@ INTENTS = {
         "response": (
             "Great news, {farmer_name}! Based on your {crop_type} crop, you can harvest in approximately "
             "{days_to_harvest} days from planting. Look out for {harvest_signs} as clear indicators that "
-            "your crop is ready. For example, you can harvest once those signs appear — typically around "
+            "your crop is ready. For example, you can harvest once those signs appear typically around "
             "{days_to_harvest} days into the growing season. Plan your equipment and storage ahead of time "
             "to avoid post-harvest losses."
         )

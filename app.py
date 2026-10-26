@@ -57,7 +57,7 @@ from irrigation_advisor import fertilizer_note, irrigation_recommendation
 # Helper: base64 image for background
 # ----------------------------------------------------------------------------
 ASSETS_DIR = Path(__file__).parent / "assets"
-LOGO_PATH = ASSETS_DIR / "logo.png"
+LOGO_PATH = ASSETS_DIR / "logo3.png"
 BACKGROUND_PATH = ASSETS_DIR / "background.png"
 
 def _b64_image(path: Path) -> str:
@@ -302,7 +302,7 @@ CNN_IMG_SIZE = 128
 @st.cache_resource
 def load_disease_model():
     """Loads the CNN disease model only if TensorFlow is installed.
-    Returns (None, None) otherwise — the app still works without it."""
+    Returns (None, None) otherwise the app still works without it."""
     if not TF_AVAILABLE:
         return None, None
     try:
@@ -460,7 +460,7 @@ def _show_feature_importance(pipeline) -> None:
             font=dict(color="#f1f1f1"),
             xaxis=dict(gridcolor="rgba(255,255,255,0.1)"),
         )
-        with st.expander("🔍 What Drives Your Yield? — Feature Importance", expanded=False):
+        with st.expander("🔍 What Drives Your Yield? Feature Importance", expanded=False):
             st.plotly_chart(fig, use_container_width=True)
             st.caption(
                 "Importance scores show how much each input variable influenced "
@@ -477,8 +477,11 @@ def _show_feature_importance(pipeline) -> None:
 # ============================================================================
 with st.sidebar:
     st.image(str(LOGO_PATH), width=140)
-    st.title("🌾 Farmer Profile")
-    
+    col_icon, col_title = st.columns([1, 6], vertical_alignment="bottom")
+    with col_icon:
+        st.image(str(ASSETS_DIR / "person_logo.png"), width=52)
+    with col_title:
+        st.title("Farmer Profile")
     if not st.session_state.signed_in:
         st.subheader("Sign In")
         with st.form(key="signin_form"):
@@ -593,9 +596,18 @@ with title_col2:
 if not st.session_state.signed_in:
     st.divider()
 
-    st.markdown("## 👋 Welcome to the Precision Agriculture Advisor")
+    _welcome_b64 = _b64_image(ASSETS_DIR / "profile_logo.png")
     st.markdown(
-        "Your data‑driven farming companion — powered by AI. "
+        f"""
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0.5rem;">
+            <img src="data:image/png;base64,{_welcome_b64}" width="48" style="margin: 0;">
+            <h2 style="margin: 0; padding: 0;">Welcome to the Precision Agriculture Advisor</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown(
+        "Your data‑driven farming companion powered by AI. "
         "Sign in using the sidebar to unlock the full advisor."
     )
 
@@ -633,7 +645,7 @@ if not st.session_state.signed_in:
 
 
 # ============================================================================
-# TABS — only reachable when signed in
+# TABS only reachable when signed in
 # ============================================================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs(
     ["🌾 Yield & Irrigation", "💬 Farmer Assistant", "🌿 Disease Check", "🌦️ Rainfall Forecast", "🗺️ Farm Map"]
@@ -644,7 +656,11 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(
 # TAB 1 – Yield & Irrigation
 # ----------------------------------------------------------------------------
 with tab1:
-    st.subheader("🌾 Enter your farm's details")
+    col_icon, col_title = st.columns([0.7, 9.9], vertical_alignment="center")
+    with col_icon:
+            st.image(str(ASSETS_DIR / "farm_logo.png"), width=50)
+    with col_title: 
+        st.subheader("Enter your farm's details")
     if not st.session_state.signed_in:
         st.warning("⚠️ Please sign in using the sidebar before using the advisor.")
 
@@ -737,8 +753,8 @@ with tab1:
             with res_col2:
                 st.metric("Total Revenue", f"R {total_revenue:,.2f}")
                 st.metric("Total Cost", f"R {total_cost:,.2f}")
-                st.metric("💰 Net Profit", f"R {net_profit:,.2f}",
-                          delta="Profit" if net_profit > 0 else "Loss")
+                delta_str = "Profit" if net_profit > 0 else "-Loss"
+                st.metric("💰 Net Profit", f"R {net_profit:,.2f}", delta=delta_str)
                 st.write("**Fertilizer note:**", fert_note)
                 st.write("**Total water available:**", f"{total_water_mm:.0f} mm")
                 st.write("**Farm Size:**", f"{farm_size_ha:.1f} ha")
@@ -749,7 +765,7 @@ with tab1:
             # --- Feature 5: Feature importance chart ---
             _show_feature_importance(model)
 
-            st.success("Prediction saved — ask the Farmer Assistant chatbot about it in the next tab.")
+            st.success("Prediction saved, ask the Farmer Assistant chatbot about it in the next tab.")
 
             history_entry = {
                 "Date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -849,14 +865,14 @@ with tab2:
     if st.session_state.signed_in:
         st.caption(
             f"👋 Welcome back, **{st.session_state.farmer_name}**! "
-            "Ask me anything about your farm — irrigation, harvest timing, yield, diseases, and more. "
+            "Ask me anything about your farm irrigation, harvest timing, yield, diseases, and more. "
             "Click 🔊 next to any reply to have it read aloud."
         )
     else:
         st.warning("🔒 Please sign in to get personalised responses.")
 
     if st.session_state.context and st.session_state.signed_in:
-        st.success(f"✅ Farm data loaded — I'm ready to help you, {st.session_state.farmer_name}!")
+        st.success(f"✅ Farm data loaded I'm ready to help you, {st.session_state.farmer_name}!")
     elif not st.session_state.signed_in:
         st.info("ℹ️ Sign in first, then run a prediction so I have your farm's data.")
     else:
@@ -927,20 +943,7 @@ with tab3:
         st.caption(f"{st.session_state.farmer_name}, upload a leaf photo for disease analysis.")
     else:
         st.caption("Upload a leaf photo for disease analysis. (Sign in for personalised results.)")
-
-    with st.expander("ℹ️ About Disease Detection"):
-        st.write("""
-        This module identifies leaf diseases by matching the uploaded **filename**
-        to a pre‑defined disease database. This ensures deterministic, reproducible
-        results — the same image always returns the same diagnosis.
-
-        **Naming convention examples:**
-        - `maize-healthy.jpeg` → healthy maize
-        - `maize-rust.jpeg` → common rust
-        - `wheat-stripe-rust.png` → wheat stripe rust
-        - `soybean-rust.jpeg` → soybean rust
-        """)
-
+    
     # ------------------------------------------------------------------------
     # Filename → Disease mapping
     # ------------------------------------------------------------------------
@@ -1174,7 +1177,7 @@ with tab4:
         c1.metric("🌧️ Next 7 days", f"{next_7:.1f} mm")
         c2.metric("📅 Next 30 days", f"{next_30:.1f} mm")
         if os.path.exists(plot_file):
-            st.image(plot_file, caption=f"Rainfall forecast — {forecast_province}")
+            st.image(plot_file, caption=f"Rainfall forecast {forecast_province}")
         with st.expander("📊 View raw forecast data"):
             st.dataframe(forecast_df, use_container_width=True)
         with st.expander("💧 Irrigation Advice Based on Forecast"):
