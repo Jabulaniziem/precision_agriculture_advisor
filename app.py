@@ -57,7 +57,7 @@ from irrigation_advisor import fertilizer_note, irrigation_recommendation
 # Helper: base64 image for background
 # ----------------------------------------------------------------------------
 ASSETS_DIR = Path(__file__).parent / "assets"
-LOGO_PATH = ASSETS_DIR / "logo3.png"
+LOGO_PATH = ASSETS_DIR / "logo.png"
 BACKGROUND_PATH = ASSETS_DIR / "background.png"
 
 def _b64_image(path: Path) -> str:
