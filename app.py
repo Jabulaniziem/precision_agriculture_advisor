@@ -515,11 +515,11 @@ with st.sidebar:
         st.info(f"📧 {st.session_state.farmer_email}")
         col_a, col_b = st.columns(2)
         with col_a:
-            if st.button("✏️ Edit Profile"):
+            if st.button("Edit Profile"):
                 st.session_state.signed_in = False
                 st.rerun()
         with col_b:
-            if st.button("🚪 Sign Out"):
+            if st.button("Sign Out"):
                 # --- Clear user identity ---
                 st.session_state.farmer_name = ""
                 st.session_state.farmer_email = ""
