@@ -193,6 +193,21 @@ st.markdown("""
         color: #d4ffd4 !important;
     }
 
+        /* ---------- Logo Glow Effect ---------- */
+    /* Targets all images in the app (Sidebar and Main Title) */
+    div[data-testid="stImage"] img {
+        filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.8)) 
+                drop-shadow(0px 0px 25px rgba(255, 255, 255, 0.4));
+        transition: filter 0.3s ease-in-out;
+    }
+
+    /* Optional: Makes the glow pulse slightly when the mouse hovers over it */
+       div[data-testid="stImage"] img {
+        filter: drop-shadow(0px 0px 10px rgba(46, 125, 50, 1)) 
+                drop-shadow(0px 0px 20px rgba(46, 125, 50, 0.6));
+    }
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
