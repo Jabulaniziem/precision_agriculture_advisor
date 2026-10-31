@@ -19,8 +19,8 @@ TRANSLATIONS = {
         "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
         
         "sidebar_profile": "Farmer Profile", "sidebar_signin": "Sign In", "sidebar_name": "Full Name", "sidebar_email": "Email Address",
-        "sidebar_btn_signin": "🚀 Sign In", "sidebar_signed_in": "✅ Signed in as", "sidebar_edit": "Edit Profile", "sidebar_signout": "Sign Out",
-        "sidebar_creds": "🔒 Your credentials are stored only for this session.", "sidebar_did_you_know": "🌱 Did you know?", "sidebar_lang": "🌍 Language / Taal / Ulimi",
+        "sidebar_btn_signin": " Sign In", "sidebar_signed_in": "✅ Signed in as", "sidebar_edit": "Edit Profile", "sidebar_signout": "Sign Out",
+        "sidebar_creds": "🔒 Your credentials are stored only for this session.", "sidebar_did_you_know": "🌱 Did you know?", "sidebar_lang": " Language / Taal / Ulimi",
         "quick_tips": "💡 Quick Tips", "tip1": "1. Enter your farm details in the first tab", "tip2": "2. Ask the chatbot any farming question", "tip3": "3. Try: 'When to irrigate?' or 'What's my yield?'", "tip4": "3. Sign in above to unlock personalised advice.",
 
         "enter_details": "Enter your farm's details", "province": "Province", "crop": "Crop", "soil": "Soil type", "farm_size": "Farm size (ha)",
@@ -79,8 +79,8 @@ TRANSLATIONS = {
         "footer": "🌾 Presisie-Landbou Adviseur | AIBUY3A Sake-analise 3.2 Projek 2026",
         
         "sidebar_profile": "Boer Profiel", "sidebar_signin": "Meld Aan", "sidebar_name": "Volle Naam", "sidebar_email": "E-pos Adres",
-        "sidebar_btn_signin": "🚀 Meld Aan", "sidebar_signed_in": "✅ Aangemeld as", "sidebar_edit": "Wysig Profiel", "sidebar_signout": "Meld Af",
-        "sidebar_creds": "🔒 Jou geloofsbriewe word slegs vir hierdie sessie gestoor.", "sidebar_did_you_know": "🌱 Het jy geweet?", "sidebar_lang": "🌍 Taal / Language / Ulimi",
+        "sidebar_btn_signin": " Meld Aan", "sidebar_signed_in": "✅ Aangemeld as", "sidebar_edit": "Wysig Profiel", "sidebar_signout": "Meld Af",
+        "sidebar_creds": "🔒 Jou geloofsbriewe word slegs vir hierdie sessie gestoor.", "sidebar_did_you_know": "🌱 Het jy geweet?", "sidebar_lang": " Taal / Language / Ulimi",
         "quick_tips": "💡 Vinnige Wenke", "tip1": "1. Voer jou plaas besonderhede in die eerste oortjie in", "tip2": "2. Vra die chatbot enige boerdery vraag", "tip3": "3. Probeer: 'Wanneer moet ek natlei?' of 'Wat is my opbrengs?'", "tip4": "3. Meld hierbo aan om persoonlike advies te ontsluit.",
 
         "enter_details": "Voer jou plaas se besonderhede in", "province": "Provinsie", "crop": "Gewas", "soil": "Grondtipe", "farm_size": "Plaasgrootte (ha)",
@@ -139,8 +139,8 @@ TRANSLATIONS = {
         "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
 
         "sidebar_profile": "Iphrofayela Yomlimi", "sidebar_signin": "Ngena", "sidebar_name": "Igama Eligcwele", "sidebar_email": "Ikheli le-imeyili",
-        "sidebar_btn_signin": "🚀 Ngena", "sidebar_signed_in": "✅ Ungene njengo", "sidebar_edit": "Hlela Iphrofayela", "sidebar_signout": "Phuma",
-        "sidebar_creds": "🔒 Imininingwane yakho igcinwa kuphela kulesi sikhathi.", "sidebar_did_you_know": "🌱 Ubusazi?", "sidebar_lang": "🌍 Ulimi / Language / Taal",
+        "sidebar_btn_signin": " Ngena", "sidebar_signed_in": "✅ Ungene njengo", "sidebar_edit": "Hlela Iphrofayela", "sidebar_signout": "Phuma",
+        "sidebar_creds": "🔒 Imininingwane yakho igcinwa kuphela kulesi sikhathi.", "sidebar_did_you_know": "🌱 Ubusazi?", "sidebar_lang": " Ulimi / Language / Taal",
         "quick_tips": "💡 Amathiphu Asheshayo", "tip1": "1. Faka imininingwane yepulazi lakho kuthebhu yokuqala", "tip2": "2. Buza i-chatbot noma yimuphi umbuzo wezolimo", "tip3": "3. Zama: 'Kufanele nginisele nini?' noma 'Isivuno sami sizoba yini?'", "tip4": "3. Ngena ngenhla ukuze uvule izeluleko ezenziwe kuwe.",
 
         "enter_details": "Faka imininingwane yepulazi lakho", "province": "Isifundazwe", "crop": "Isitshalo", "soil": "Uhlobo lomhlabathi", "farm_size": "Usayizi wepulazi (ha)",
@@ -199,8 +199,8 @@ TRANSLATIONS = {
         "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
 
         "sidebar_profile": "Profaele ea Molemi", "sidebar_signin": "Kena", "sidebar_name": "Lebitso le Felletseng", "sidebar_email": "Aterese ea Imeile",
-        "sidebar_btn_signin": "🚀 Kena", "sidebar_signed_in": "✅ U kene joalo ka", "sidebar_edit": "Fetola Profaele", "sidebar_signout": "Tsoa",
-        "sidebar_creds": "🔒 Lintlha tsa hau tsa boitsebiso li bolokiloe bakeng sa nako ena feela.", "sidebar_did_you_know": "🌱 U ne u tseba?", "sidebar_lang": "🌍 Puo / Language / Taal",
+        "sidebar_btn_signin": " Kena", "sidebar_signed_in": "✅ U kene joalo ka", "sidebar_edit": "Fetola Profaele", "sidebar_signout": "Tsoa",
+        "sidebar_creds": "🔒 Lintlha tsa hau tsa boitsebiso li bolokiloe bakeng sa nako ena feela.", "sidebar_did_you_know": "🌱 U ne u tseba?", "sidebar_lang": " Puo / Language / Taal",
         "quick_tips": "💡 Malebela a Potlakileng", "tip1": "1. Kenya lintlha tsa polasi ea hau tabong ea pele", "tip2": "2. Botsa chatbot potso efe kapa efe ea temo", "tip3": "3. Leka: 'Ke lokela ho nosetsa neng?' kapa 'Tlhahiso ea ka e tla ba efe?'", "tip4": "3. Kena ka holimo ho bula likeletso tse ikhethileng.",
 
         "enter_details": "Kenya lintlha tsa polasi ea hau", "province": "Profinsi", "crop": "Sejalo", "soil": "Mofuta oa mobu", "farm_size": "Boholo ba polasi (ha)",

@@ -50,6 +50,10 @@ from translations import TRANSLATIONS
 if "language" not in st.session_state:
     st.session_state.language = "English"
 
+def change_language():
+    """Callback to update language state immediately when the selectbox changes."""
+    st.session_state.language = st.session_state.lang_selector
+
 def t(key):
     """Returns the translated string for the current language."""
     lang_dict = TRANSLATIONS.get(st.session_state.language, TRANSLATIONS["English"])
@@ -105,7 +109,7 @@ st.markdown("""
     [data-testid="stFileUploader"] { background-color: rgba(40, 55, 40, 0.4) !important; }
     [data-testid="stDataFrame"] { background-color: rgba(40, 55, 40, 0.4) !important; color: #f1f1f1 !important; }
     code, pre { background-color: rgba(60, 80, 60, 0.6) !important; color: #d4ffd4 !important; }
-    div[data-testid="stImage"] img { filter: drop-shadow(0px 0px 12px rgba(255, 255, 255, 0.8)) drop-shadow(0px 0px 25px rgba(255, 255, 255, 0.4)); transition: filter 0.3s ease-in-out; }
+    div[data-testid="stImage"] img { filter: drop-shadow(0px 0px 2px rgba(255, 255, 180, 0.8)) drop-shadow(0px 0px 25px rgba(255, 255, 255, 0.4)); transition: filter 0.3s ease-in-out; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -250,6 +254,15 @@ def _show_feature_importance(pipeline) -> None:
 # SIDEBAR (Fully Translated)
 # ============================================================================
 with st.sidebar:
+    # MOVED LANGUAGE SELECTOR TO TOP AND ADDED CALLBACK
+    if "lang_selector" not in st.session_state:
+        st.session_state.lang_selector = st.session_state.language
+        
+    current_lang_index = list(TRANSLATIONS.keys()).index(st.session_state.language) if st.session_state.language in TRANSLATIONS else 0
+    st.selectbox(t("sidebar_lang"), options=list(TRANSLATIONS.keys()), index=current_lang_index, key="lang_selector", on_change=change_language)
+    
+    st.divider()
+
     st.image(str(LOGO_PATH), width=100)
     col_icon, col_title = st.columns([1, 6], vertical_alignment="bottom")
     with col_icon: st.image(str(ASSETS_DIR / "person_logo.png"), width=52)
@@ -310,10 +323,6 @@ with st.sidebar:
 
     st.divider()
 
-    # Language Selector
-    current_lang_index = list(TRANSLATIONS.keys()).index(st.session_state.language) if st.session_state.language in TRANSLATIONS else 0
-    st.session_state.language = st.selectbox(t("sidebar_lang"), options=list(TRANSLATIONS.keys()), index=current_lang_index)
-
 # ============================================================================
 # MAIN TITLE & AUTH GATE
 # ============================================================================
@@ -333,7 +342,7 @@ if not st.session_state.signed_in:
     _welcome_b64 = _b64_image(ASSETS_DIR / "profile_logo.png")
     st.markdown(f"""
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 0.5rem;">
-            <img src="data:image/png;base64,{_welcome_b64}" width="48" style="margin: 0;">
+            <img src="data:image/png;base64,{_welcome_b64}" width="80" style="margin: 0;">
             <h2 style="margin: 0; padding: 0;">{t("auth_welcome")}</h2>
         </div>
         """, unsafe_allow_html=True)
