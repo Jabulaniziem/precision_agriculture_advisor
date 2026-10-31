@@ -57,7 +57,8 @@ from irrigation_advisor import fertilizer_note, irrigation_recommendation
 # Helper: base64 image for background
 # ----------------------------------------------------------------------------
 ASSETS_DIR = Path(__file__).parent / "assets"
-LOGO_PATH = ASSETS_DIR / "logo.png"
+LOGO_PATH = ASSETS_DIR / "logo3.png"
+LOGO2_PATH = ASSETS_DIR / "logo1.png"
 BACKGROUND_PATH = ASSETS_DIR / "background.png"
 
 def _b64_image(path: Path) -> str:
@@ -476,7 +477,7 @@ def _show_feature_importance(pipeline) -> None:
 # SIDEBAR – Formal Sign‑In
 # ============================================================================
 with st.sidebar:
-    st.image(str(LOGO_PATH), width=140)
+    st.image(str(LOGO_PATH), width=100)
     col_icon, col_title = st.columns([1, 6], vertical_alignment="bottom")
     with col_icon:
         st.image(str(ASSETS_DIR / "person_logo.png"), width=52)
@@ -495,7 +496,7 @@ with st.sidebar:
                 value=st.session_state.farmer_email,
                 placeholder="thabo@farm.co.za"
             )
-            submitted = st.form_submit_button("🚀 Sign In", type="primary")
+            submitted = st.form_submit_button(" Sign In", type="primary")
             if submitted:
                 if name_input.strip() and email_input.strip():
                     if "@" not in email_input or "." not in email_input:
@@ -572,7 +573,7 @@ with st.sidebar:
 # ============================================================================
 title_col1, title_col2 = st.columns([1, 6])
 with title_col1:
-    st.image(str(LOGO_PATH), width=90)
+    st.image(str(LOGO2_PATH), width=140)
 with title_col2:
     if st.session_state.signed_in:
         st.title("Precision Agriculture Advisor")
