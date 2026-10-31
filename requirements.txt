@@ -11,3 +11,5 @@ plotly
 Pillow
 requests
 python-dotenv
+folium
+streamlit-folium
