@@ -1,0 +1,19 @@
+name: precision-ag-env 
+dependencies: 
+- python=3.10
+- pip:
+  - pandas
+  - numpy
+  - scikit-learn 
+  - xgboost
+  - streamlit
+  - joblib
+  - prophet
+  - matplotlib
+  - seaborn
+  - plotly
+  - Pillow
+  - requests
+  - python-dotenv
+  - folium
+  - streamlit-folium
