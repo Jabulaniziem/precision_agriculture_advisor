@@ -16,7 +16,7 @@ TRANSLATIONS = {
         "auth_card7_title": "Voice Output", "auth_card7_desc": "Replies read aloud",
         "auth_card8_title": "Farm Map", "auth_card8_desc": "Province‑level visualisation",
         "auth_warning": "🔒 **Please sign in using the sidebar to continue.**",
-        "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
+        "footer": " Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
         
         "sidebar_profile": "Farmer Profile", "sidebar_signin": "Sign In", "sidebar_name": "Full Name", "sidebar_email": "Email Address",
         "sidebar_btn_signin": " Sign In", "sidebar_signed_in": "✅ Signed in as", "sidebar_edit": "Edit Profile", "sidebar_signout": "Sign Out",
@@ -58,7 +58,7 @@ TRANSLATIONS = {
         "tab4_forecast_caption": "{title} - {prov}", "tab4_low_rain": "⚠️ **Low rainfall expected.** Consider increasing irrigation.",
         "tab4_mod_rain": "🌱 **Moderate rainfall.** Maintain normal irrigation.", "tab4_good_rain": "✅ **Good rainfall.** Reduce irrigation to save water.", "tab4_no_forecast": "No forecast found for this province.",
 
-        "map_title": "🗺️ Farm Locations in South Africa", "map_desc": "Provinces are shown with approximate centroids – zoom in to explore.",
+        "map_title": "🗺️ Farm Locations in South Africa", "map_desc": "Provinces are shown with approximate centroids zoom in to explore.",
         "tab5_map_err": "`folium` and `streamlit-folium` are not installed. Run `pip install folium streamlit-folium` to enable this map."
     },
     "Afrikaans": {
@@ -76,7 +76,7 @@ TRANSLATIONS = {
         "auth_card7_title": "Stem Uitset", "auth_card7_desc": "Antwoorde word hardop gelees",
         "auth_card8_title": "Plaas Kaart", "auth_card8_desc": "Provinsiale vlak visualisering",
         "auth_warning": "🔒 **Meld asseblief aan via die systaaf om voort te gaan.**",
-        "footer": "🌾 Presisie-Landbou Adviseur | AIBUY3A Sake-analise 3.2 Projek 2026",
+        "footer": " Presisie-Landbou Adviseur | AIBUY3A Sake-analise 3.2 Projek 2026",
         
         "sidebar_profile": "Boer Profiel", "sidebar_signin": "Meld Aan", "sidebar_name": "Volle Naam", "sidebar_email": "E-pos Adres",
         "sidebar_btn_signin": " Meld Aan", "sidebar_signed_in": "✅ Aangemeld as", "sidebar_edit": "Wysig Profiel", "sidebar_signout": "Meld Af",
@@ -118,7 +118,7 @@ TRANSLATIONS = {
         "tab4_forecast_caption": "{title} - {prov}", "tab4_low_rain": "⚠️ **Lae reënval verwag.** Oorweeg dit om besproeiing te verhoog.",
         "tab4_mod_rain": "🌱 **Matige reënval.** Handhaaf normale besproeiing.", "tab4_good_rain": "✅ **Goeie reënval.** Verminder besproeiing om water te spaar.", "tab4_no_forecast": "Geen voorspelling vir hierdie provinsie gevind nie.",
 
-        "map_title": "🗺️ Plaasliggings in Suid-Afrika", "map_desc": "Provinsies word met benaderde sentroïede gewys – zoom in om te verken.",
+        "map_title": "🗺️ Plaasliggings in Suid-Afrika", "map_desc": "Provinsies word met benaderde sentroïede gewys zoom in om te verken.",
         "tab5_map_err": "`folium` en `streamlit-folium` is nie geïnstalleer nie. Hardloop `pip install folium streamlit-folium` om hierdie kaart te aktiveer."
     },
     "isiZulu": {
@@ -136,7 +136,7 @@ TRANSLATIONS = {
         "auth_card7_title": "Ukuphuma Kwezwi", "auth_card7_desc": "Izimpendulo zifundwa ngokuzwakalayo",
         "auth_card8_title": "Imephu YasePulazini", "auth_card8_desc": "Ukuboniswa kwezinga lesifundazwe",
         "auth_warning": "🔒 **Sicela ungena usebenzisa uhlangothi lwesikhombisi ukuqhubeka.**",
-        "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
+        "footer": " Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
 
         "sidebar_profile": "Iphrofayela Yomlimi", "sidebar_signin": "Ngena", "sidebar_name": "Igama Eligcwele", "sidebar_email": "Ikheli le-imeyili",
         "sidebar_btn_signin": " Ngena", "sidebar_signed_in": "✅ Ungene njengo", "sidebar_edit": "Hlela Iphrofayela", "sidebar_signout": "Phuma",
@@ -196,7 +196,7 @@ TRANSLATIONS = {
         "auth_card7_title": "Lentsoe la Molumo", "auth_card7_desc": "Likarabo li baloa holimo",
         "auth_card8_title": "'Mapa oa Polasi", "auth_card8_desc": "Pono ea boemo ba profinsi",
         "auth_warning": "🔒 **Ka kopo kena u sebelisa sidebar ho tsoela pele.**",
-        "footer": "🌾 Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
+        "footer": "Precision Agriculture Advisor | AIBUY3A Business Analysis 3.2 Project 2026",
 
         "sidebar_profile": "Profaele ea Molemi", "sidebar_signin": "Kena", "sidebar_name": "Lebitso le Felletseng", "sidebar_email": "Aterese ea Imeile",
         "sidebar_btn_signin": " Kena", "sidebar_signed_in": "✅ U kene joalo ka", "sidebar_edit": "Fetola Profaele", "sidebar_signout": "Tsoa",

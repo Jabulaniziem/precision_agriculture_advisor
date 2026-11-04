@@ -265,7 +265,7 @@ with st.sidebar:
     
     st.divider()
 
-    st.image(str(LOGO_PATH), width=140)
+    st.image(str(LOGO_PATH), width=120)
     col_icon, col_title = st.columns([1, 6], vertical_alignment="bottom")
     with col_icon: st.image(str(ASSETS_DIR / "person_logo.png"), width=52)
     with col_title: st.title(t("sidebar_profile"))
@@ -334,7 +334,7 @@ with title_col1:
 with title_col2:
     if st.session_state.signed_in:
         st.title(t("app_title"))
-        st.caption(f"Hi **{st.session_state.farmer_name}** | 📧 {st.session_state.farmer_email} | AIBUY3A Business Analysis 3.2 Project")
+        st.caption(f"Hi **{st.session_state.farmer_name}** | 📧 {st.session_state.farmer_email} | AIBUY3A Business Analysis 3.2 Project 2026")
     else:
         st.title(t("app_title"))
         st.caption(t("app_subtitle"))
@@ -746,7 +746,7 @@ with tab3:
     else:
         st.caption(t("tab3_caption_guest"))
 
-    st.info("💡 **Note:** The current filename-based analysis is for **testing and demonstration purposes**. However, the underlying CNN model architecture is fully built and ready for deployment with actual image inference.")
+    st.info(" **Note!:** The current filename-based analysis is for **testing and demonstration purposes**. However, the underlying CNN model architecture is fully built and ready for deployment with actual image inference.")
 
     uploaded_file = st.file_uploader(t("disease_upload"), type=["jpg", "jpeg", "png"], accept_multiple_files=False, key="disease_uploader")
 
@@ -863,16 +863,20 @@ with tab5:
         # Center the map on South Africa
         m = folium.Map(location=[-28.5, 26.0], zoom_start=6)
         
-        # Check if the user has run a yield prediction in Tab 1
-        has_context = bool(st.session_state.context)
-        active_province = st.session_state.context.get("province", None) if has_context else None
+        # Check specifically if a YIELD PREDICTION has been run
+        # (Signing in creates context, but doesn't add 'province' until a prediction is made)
+        has_yield_context = "province" in st.session_state.context
+        active_province = st.session_state.context.get("province", None) if has_yield_context else None
+        
+        # Safely get farm_size (default to 0 if not found)
+        farm_size = float(st.session_state.context.get("farm_size_ha", 0))
         
         for prov, coords in PROVINCE_COORDS.items():
             is_active = (prov == active_province)
             
-            # --- FEATURE 1 & 3: Dynamic Colors & Rich HTML Popups ---
+            # --- Dynamic Colors & Rich HTML Popups ---
             if is_active:
-                # Highlight the user's province in Gold
+                # Highlight the user's province in Gold/Orange
                 icon_color = "orange"
                 icon_type = "star"
                 
@@ -880,7 +884,6 @@ with tab5:
                 crop = st.session_state.context.get("crop_type", "Unknown")
                 yield_val = st.session_state.context.get("predicted_yield", "0")
                 profit = st.session_state.context.get("net_profit", 0)
-                farm_size = float(st.session_state.context.get("farm_size_ha", 0))
                 
                 popup_html = f"""
                 <div style="font-family: sans-serif; min-width: 150px;">
@@ -908,7 +911,7 @@ with tab5:
                 icon=folium.Icon(color=icon_color, icon=icon_type, prefix="fa")
             ).add_to(m)
             
-            # --- FEATURE 2: Visualizing Farm Size ---
+            # --- Visualizing Farm Size ---
             if is_active and farm_size > 0:
                 # Calculate radius in meters: sqrt(Area / pi) * 100 (since 1 ha = 10,000 sq meters)
                 radius_meters = math.sqrt((farm_size * 10000) / math.pi)
@@ -930,14 +933,13 @@ with tab5:
         folium.LayerControl().add_to(m)
 
         assert folium_static is not None
-        folium_static(m, width=900, height=550) # Made the map slightly larger
+        folium_static(m, width=900, height=550) 
         
-        # --- FEATURE 4: Interactive Legend ---
-        if has_context:
-            st.info(f"🗺️ **Map synchronized:** Showing your predicted farm in **{active_province}**. The green circle represents an area of roughly **{farm_size} hectares**.")
+        # --- Interactive Legend ---
+        if has_yield_context:
+            st.info(f"**Map synchronized:** Showing your predicted farm in **{active_province}**. The green circle represents an area of roughly **{farm_size} hectares**.")
         else:
-            st.info("💡 **Tip:** Go to the **Yield & Irrigation** tab, run a prediction, and come back here to see your farm mapped out visually!")
-
+            st.info("**Tip:** Go to the **Yield & Irrigation** tab, run a prediction, and come back here to see your farm mapped out visually!")
 # ============================================================================
 # FOOTER
 # ============================================================================
