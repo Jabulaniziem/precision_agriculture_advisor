@@ -15,6 +15,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+import re
 import numpy as np
 import pandas as pd
 import joblib
@@ -44,6 +45,7 @@ from chatbot import FarmChatbot, suggest_questions, get_agronomic_fact
 from irrigation_advisor import fertilizer_note, irrigation_recommendation
 from translations import TRANSLATIONS
 
+
 # ----------------------------------------------------------------------------
 # LANGUAGE SETUP
 # ----------------------------------------------------------------------------
@@ -63,7 +65,7 @@ def t(key):
 # ASSETS & IMAGES
 # ----------------------------------------------------------------------------
 ASSETS_DIR = Path(__file__).parent / "assets"
-LOGO_PATH = ASSETS_DIR / "logo3.png"
+LOGO_PATH = ASSETS_DIR / "logo1.png"
 LOGO2_PATH = ASSETS_DIR / "logo1.png"
 BACKGROUND_PATH = ASSETS_DIR / "background.png"
 
@@ -263,7 +265,7 @@ with st.sidebar:
     
     st.divider()
 
-    st.image(str(LOGO_PATH), width=100)
+    st.image(str(LOGO_PATH), width=140)
     col_icon, col_title = st.columns([1, 6], vertical_alignment="bottom")
     with col_icon: st.image(str(ASSETS_DIR / "person_logo.png"), width=52)
     with col_title: st.title(t("sidebar_profile"))
@@ -305,7 +307,7 @@ with st.sidebar:
                 st.session_state.chat_history = []
                 st.session_state.prediction_history = []
                 st.session_state.bot = FarmChatbot()
-                for key in ["chat_input", "_suggested_question", "weather_province", "weather_town", "forecast_province", "get_weather", "yield_province", "yield_crop", "yield_soil", "yield_farm_size", "yield_rainfall", "yield_irrigation", "yield_moisture", "yield_temp", "yield_fert", "yield_pest", "yield_market", "yield_cost"]:
+                for key in ["chat_input", "_suggested_question", "weather_province", "weather_town", "forecast_province", "get_weather", "yield_province", "yield_crop", "yield_soil", "yield_farm_size", "yield_rainfall", "yield_irrigation", "yield_moisture", "yield_temp", "yield_fert", "yield_pest", "yield_market", "yield_cost", "disease_uploader"]:
                     st.session_state.pop(key, None)
                 st.rerun()
         st.divider()
@@ -572,23 +574,181 @@ with tab2:
 # ----------------------------------------------------------------------------
 # TAB 3 – Disease Check
 # ----------------------------------------------------------------------------
+def detect_disease_from_filename(filename):
+    """
+    Demo filename-based disease detection.
+    Supports spaces, underscores, hyphens and mixed capitalization.
+    """
+    # Remove file extension and normalize filename
+    name = filename.rsplit(".", 1)[0].lower()
+    normalized = re.sub(r"[^a-z0-9]+", " ", name).strip()
+    searchable = f" {normalized} "
+
+    def has_keyword(keyword):
+        keyword = re.sub(r"[^a-z0-9]+", " ", keyword.lower()).strip()
+        return f" {keyword} " in searchable
+
+    # Identify crop
+    crop = "Unknown Crop"
+    crop_keywords = {
+        "Wheat": ["wheat"],
+        "Maize": ["maize", "corn"],
+        "Soybean": ["soybean", "soy", "soya"],
+        "Sunflower": ["sunflower"],
+    }
+
+    for crop_name, keywords in crop_keywords.items():
+        if any(has_keyword(word) for word in keywords):
+            crop = crop_name
+            break
+
+    # Disease detection: specific names before general names
+    disease_rules = [
+        {
+            "keywords": ["stripe rust"],
+            "name": "Stripe Rust",
+            "organism": "Puccinia striiformis",
+            "confidence": "93.4%",
+            "recommendation": "Apply an appropriate triazole fungicide and monitor crop development.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["stem rust"],
+            "name": "Stem Rust",
+            "organism": "Puccinia graminis",
+            "confidence": "92.0%",
+            "recommendation": "Monitor the crop and apply an appropriate fungicide when necessary.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["leaf rust"],
+            "name": "Leaf Rust",
+            "organism": "Puccinia species",
+            "confidence": "91.0%",
+            "recommendation": "Scout affected leaves and consider an appropriate fungicide.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["common rust"],
+            "name": "Common Rust",
+            "organism": "Puccinia sorghi",
+            "confidence": "92.7%",
+            "recommendation": "Apply an appropriate fungicide and continue crop monitoring.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["northern leaf blight"],
+            "name": "Northern Leaf Blight",
+            "organism": "Exserohilum turcicum",
+            "confidence": "89.1%",
+            "recommendation": "Rotate crops and apply an appropriate fungicide when necessary.",
+            "color": "red"
+        },
+        {
+            "keywords": ["gray leaf spot", "grey leaf spot"],
+            "name": "Gray Leaf Spot",
+            "organism": "Cercospora species",
+            "confidence": "90.0%",
+            "recommendation": "Improve field management and monitor affected leaves.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["leaf spot"],
+            "name": "Leaf Spot",
+            "organism": "Leaf spot fungal infection",
+            "confidence": "88.0%",
+            "recommendation": "Remove heavily affected plant material where practical and monitor the crop.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["powdery mildew"],
+            "name": "Powdery Mildew",
+            "organism": "Powdery mildew fungal infection",
+            "confidence": "90.0%",
+            "recommendation": "Monitor the infection and consider an appropriate fungicide.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["downy mildew"],
+            "name": "Downy Mildew",
+            "organism": "Downy mildew infection",
+            "confidence": "90.0%",
+            "recommendation": "Improve crop airflow and monitor moisture conditions.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["blight"],
+            "name": "Leaf Blight",
+            "organism": "Leaf blight infection",
+            "confidence": "89.0%",
+            "recommendation": "Remove infected crop residue where practical and monitor disease spread.",
+            "color": "red"
+        },
+        {
+            "keywords": ["mildew"],
+            "name": "Mildew",
+            "organism": "Mildew infection",
+            "confidence": "88.0%",
+            "recommendation": "Monitor affected leaves and consider appropriate disease management.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["rust"],
+            "name": "Rust",
+            "organism": "Rust fungal infection",
+            "confidence": "90.0%",
+            "recommendation": "Monitor the affected crop and consider an appropriate fungicide.",
+            "color": "orange"
+        },
+        {
+            "keywords": ["spot"],
+            "name": "Leaf Spot",
+            "organism": "Leaf spot infection",
+            "confidence": "88.0%",
+            "recommendation": "Monitor affected leaves and manage infected crop residue.",
+            "color": "orange"
+        }
+    ]
+
+    for rule in disease_rules:
+        if any(has_keyword(keyword) for keyword in rule["keywords"]):
+            return {
+                "status": f"⚠️ {rule['name']}",
+                "disease": f"{rule['organism']} detected ({crop})",
+                "confidence": rule["confidence"],
+                "recommendation": rule["recommendation"],
+                "color": rule["color"]
+            }
+
+    # Check for healthy samples
+    if has_keyword("healthy"):
+        return {
+            "status": "✅ Healthy",
+            "disease": f"No disease indicated in filename ({crop})",
+            "confidence": "98.0%",
+            "recommendation": "Continue routine crop monitoring.",
+            "color": "green"
+        }
+
+    # No recognised keyword
+    return {
+        "status": "❓ Unknown Sample",
+        "disease": "Filename does not match any known disease pattern.",
+        "confidence": "—",
+        "recommendation": "Rename the file using a descriptive name such as 'maize-rust.jpeg'.",
+        "color": "grey"
+    }
+
 with tab3:
     st.subheader(t("disease_title"))
     if st.session_state.signed_in:
         st.caption(t("tab3_caption").format(farmer_name=st.session_state.farmer_name))
     else:
         st.caption(t("tab3_caption_guest"))
-    
-    FILENAME_DISEASE_MAP = {
-        "maize-healthy": {"status": "✅ Healthy", "disease": "No disease detected", "confidence": "98.4%", "recommendation": "Continue regular monitoring.", "color": "green"},
-        "maize-rust": {"status": "⚠️ Common Rust", "disease": "Puccinia sorghi infection detected", "confidence": "92.7%", "recommendation": "Apply triazole or strobilurin fungicide.", "color": "orange"},
-        "maize-blight": {"status": "❌ Northern Leaf Blight", "disease": "Exserohilum turcicum infection detected", "confidence": "89.1%", "recommendation": "Rotate crops. Apply fungicide at first sign.", "color": "red"},
-        "wheat-healthy": {"status": "✅ Healthy", "disease": "No disease detected", "confidence": "98.0%", "recommendation": "Continue routine scouting.", "color": "green"},
-        "wheat-stripe-rust": {"status": "⚠️ Stripe Rust", "disease": "Puccinia striiformis infection detected", "confidence": "93.4%", "recommendation": "Apply triazole fungicide immediately.", "color": "orange"},
-    }
-    DEFAULT_DISEASE_RESULT = {"status": "❓ Unknown Sample", "disease": "Filename does not match any known disease pattern.", "confidence": "—", "recommendation": "Rename the file using a descriptive name such as 'maize-rust.jpeg'.", "color": "grey"}
 
-    uploaded_file = st.file_uploader(t("disease_upload"), type=["jpg", "jpeg", "png"], accept_multiple_files=False)
+    st.info("💡 **Note:** The current filename-based analysis is for **testing and demonstration purposes**. However, the underlying CNN model architecture is fully built and ready for deployment with actual image inference.")
+
+    uploaded_file = st.file_uploader(t("disease_upload"), type=["jpg", "jpeg", "png"], accept_multiple_files=False, key="disease_uploader")
 
     if uploaded_file is not None:
         st.image(uploaded_file, caption=t("tab3_uploaded_img"), use_container_width=True)
@@ -597,6 +757,7 @@ with tab3:
         with col2: st.write(f"{t('tab3_file_size')} {uploaded_file.size / 1024:.1f} KB")
         
         try:
+            uploaded_file.seek(0) # Reset pointer to avoid empty read
             image = PILImage.open(io.BytesIO(uploaded_file.read()))
             with col3: st.write(f"{t('tab3_img_dims')} {image.width} x {image.height} pixels")
 
@@ -605,8 +766,7 @@ with tab3:
                 if st.button(t("disease_analyze"), type="primary"):
                     with st.spinner("Analyzing..."):
                         raw_name = uploaded_file.name
-                        base_name = raw_name.rsplit(".", 1)[0].lower().replace("_", "-").replace(" ", "-")
-                        result = FILENAME_DISEASE_MAP.get(base_name, DEFAULT_DISEASE_RESULT)
+                        result = detect_disease_from_filename(raw_name)
 
                         st.divider()
                         st.subheader(t("disease_results"))
@@ -694,14 +854,89 @@ with tab4:
 with tab5:
     st.subheader(t("map_title"))
     st.caption(t("map_desc"))
+    
     if not MAP_AVAILABLE:
         st.warning(t("tab5_map_err"))
     else:
+        import math # Needed for calculating farm radius
+        
+        # Center the map on South Africa
         m = folium.Map(location=[-28.5, 26.0], zoom_start=6)
+        
+        # Check if the user has run a yield prediction in Tab 1
+        has_context = bool(st.session_state.context)
+        active_province = st.session_state.context.get("province", None) if has_context else None
+        
         for prov, coords in PROVINCE_COORDS.items():
-            folium.Marker(coords, popup=prov, icon=folium.Icon(color="green", icon="leaf", prefix="fa")).add_to(m)
+            is_active = (prov == active_province)
+            
+            # --- FEATURE 1 & 3: Dynamic Colors & Rich HTML Popups ---
+            if is_active:
+                # Highlight the user's province in Gold
+                icon_color = "orange"
+                icon_type = "star"
+                
+                # Get data from Tab 1
+                crop = st.session_state.context.get("crop_type", "Unknown")
+                yield_val = st.session_state.context.get("predicted_yield", "0")
+                profit = st.session_state.context.get("net_profit", 0)
+                farm_size = float(st.session_state.context.get("farm_size_ha", 0))
+                
+                popup_html = f"""
+                <div style="font-family: sans-serif; min-width: 150px;">
+                    <h4 style="margin-bottom: 5px; color: #2E7D32;">📍 {prov}</h4>
+                    <b>Your Active Farm</b><br>
+                    <hr style="margin: 5px 0;">
+                    <b>Crop:</b> {crop}<br>
+                    <b>Yield:</b> {yield_val} t/ha<br>
+                    <b>Est. Profit:</b> R {profit:,.2f}<br>
+                    <b>Size:</b> {farm_size} ha
+                </div>
+                """
+                popup = folium.Popup(popup_html, max_width=250)
+                
+            else:
+                # Default style for other provinces
+                icon_color = "green"
+                icon_type = "leaf"
+                popup = folium.Popup(f"<b>{prov}</b><br>No active prediction.", max_width=200)
+
+            # Add the Marker
+            folium.Marker(
+                coords, 
+                popup=popup, 
+                icon=folium.Icon(color=icon_color, icon=icon_type, prefix="fa")
+            ).add_to(m)
+            
+            # --- FEATURE 2: Visualizing Farm Size ---
+            if is_active and farm_size > 0:
+                # Calculate radius in meters: sqrt(Area / pi) * 100 (since 1 ha = 10,000 sq meters)
+                radius_meters = math.sqrt((farm_size * 10000) / math.pi)
+                
+                # Draw a semi-transparent circle representing the farm
+                folium.Circle(
+                    location=coords,
+                    radius=radius_meters,
+                    color="#2E7D32",
+                    fill=True,
+                    fill_color="#4CAF50",
+                    fill_opacity=0.4,
+                    tooltip=f"Approximate Farm Boundary ({farm_size} ha)"
+                ).add_to(m)
+
+        # Add a layer control to toggle map styles
+        folium.TileLayer('OpenStreetMap').add_to(m)
+        folium.TileLayer('Stamen Terrain', name='Terrain View', attr='Stamen Design').add_to(m)
+        folium.LayerControl().add_to(m)
+
         assert folium_static is not None
-        folium_static(m, width=700, height=450)
+        folium_static(m, width=900, height=550) # Made the map slightly larger
+        
+        # --- FEATURE 4: Interactive Legend ---
+        if has_context:
+            st.info(f"🗺️ **Map synchronized:** Showing your predicted farm in **{active_province}**. The green circle represents an area of roughly **{farm_size} hectares**.")
+        else:
+            st.info("💡 **Tip:** Go to the **Yield & Irrigation** tab, run a prediction, and come back here to see your farm mapped out visually!")
 
 # ============================================================================
 # FOOTER
