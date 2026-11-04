@@ -1,19 +1,25 @@
-name: precision-ag-env 
-dependencies: 
-- python=3.10
-- pip:
-  - pandas
-  - numpy
-  - scikit-learn 
-  - xgboost
-  - streamlit
-  - joblib
-  - prophet
-  - matplotlib
-  - seaborn
-  - plotly
-  - Pillow
-  - requests
-  - python-dotenv
-  - folium
-  - streamlit-folium
+
+name: precision-agriculture-advisor
+
+channels:
+  - conda-forge
+
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - streamlit
+      - pandas
+      - numpy
+      - pillow
+      - requests
+      - scikit-learn
+      - xgboost
+      - joblib
+      - prophet
+      - matplotlib
+      - seaborn
+      - plotly
+      - python-dotenv
+      - folium
+      - streamlit-folium
